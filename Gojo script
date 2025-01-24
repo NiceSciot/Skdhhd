@@ -1,22 +1,9 @@
--- LocalScript inside StarterPlayer -> StarterPlayerScripts
+-- ServerScript in ServerScriptService
 
-local player = game.Players.LocalPlayer
-local playerGui = player.PlayerGui
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
 local ChatService = game:GetService("Chat")
-
--- Create the UI
-local screenGui = Instance.new("ScreenGui")
-screenGui.Parent = playerGui
-screenGui.Name = "HonoredOneUI"
-
-local button = Instance.new("TextButton")
-button.Parent = screenGui
-button.Size = UDim2.new(0, 200, 0, 50)
-button.Position = UDim2.new(0.5, -100, 0.5, -25)
-button.Text = "The Honored One"
-button.TextSize = 20
+local Players = game:GetService("Players")
 
 -- Create RemoteEvent in ReplicatedStorage if it doesn't exist
 local honoredEvent = ReplicatedStorage:FindFirstChild("HonoredEvent")
@@ -26,36 +13,52 @@ if not honoredEvent then
     honoredEvent.Parent = ReplicatedStorage
 end
 
--- Function to handle button click and trigger the server-side logic
-button.MouseButton1Click:Connect(function()
-    honoredEvent:FireServer()  -- Fire event to the server when the button is clicked
-end)
+-- Function to create UI and handle button press
+local function createUI(player)
+    -- Create ScreenGui and button for the player
+    local screenGui = Instance.new("ScreenGui")
+    screenGui.Parent = player.PlayerGui
+    screenGui.Name = "HonoredOneUI"
 
--- Server-side script (to be placed in ServerScriptService)
--- This part of the script must be inside a regular Script in ServerScriptService
+    local button = Instance.new("TextButton")
+    button.Parent = screenGui
+    button.Size = UDim2.new(0, 200, 0, 50)
+    button.Position = UDim2.new(0.5, -100, 0.5, -25)
+    button.Text = "The Honored One"
+    button.TextSize = 20
 
+    -- Function to handle button click event
+    button.MouseButton1Click:Connect(function()
+        honoredEvent:FireServer(player)  -- Fire the event to the server when the button is clicked
+    end)
+end
+
+-- Function to honor the player (lift and flat in the air)
 local function honorPlayer(player)
     -- Ensure the player has a character and humanoid
     if player.Character and player.Character:FindFirstChild("Humanoid") then
         local humanoid = player.Character.Humanoid
         local rootPart = player.Character:WaitForChild("HumanoidRootPart")
-        
+
         -- Make sure the character is not already being honored
         if not player.Character:FindFirstChild("HonoredEffect") then
             local honoredEffect = Instance.new("BoolValue")
             honoredEffect.Name = "HonoredEffect"
             honoredEffect.Parent = player.Character
 
-            -- Lift player into the air (using Tween for smooth movement)
+            -- Set up the player's pose and platform stand (force them to "float")
+            humanoid.Sit = false
+            humanoid.PlatformStand = true  -- Disable character's movement while "floating"
+
+            -- Lay the player flat (rotate them to lie on their back)
+            rootPart.CFrame = rootPart.CFrame * CFrame.Angles(math.rad(90), 0, 0)
+            
+            -- Lift the player into the air
             local originalPosition = rootPart.Position
             local targetPosition = originalPosition + Vector3.new(0, 10, 0)  -- Raise 10 studs up
 
             -- Tween the player upwards
             TweenService:Create(rootPart, TweenInfo.new(1), {Position = targetPosition}):Play()
-
-            -- Lay the player flat (by setting the humanoid's 'Sit' property to true and adjusting their orientation)
-            humanoid.Sit = true
-            humanoid.PlatformStand = true  -- Disable character's movement while "floating"
 
             -- Wait a bit before saying the message
             wait(1)
@@ -69,10 +72,10 @@ local function honorPlayer(player)
             -- Bring the player back down
             TweenService:Create(rootPart, TweenInfo.new(1), {Position = originalPosition}):Play()
 
-            -- Stop the sitting animation and allow movement again
+            -- Reset the sitting and platform stand
             wait(1)
-            humanoid.Sit = false
             humanoid.PlatformStand = false
+            rootPart.CFrame = rootPart.CFrame  -- Reset to normal stance
 
             -- Clean up the effect
             honoredEffect:Destroy()
@@ -82,3 +85,8 @@ end
 
 -- Listen for the event to trigger the honor effect
 honoredEvent.OnServerEvent:Connect(honorPlayer)
+
+-- Create UI for each player that joins
+Players.PlayerAdded:Connect(function(player)
+    createUI(player)
+end)
