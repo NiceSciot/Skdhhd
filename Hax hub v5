@@ -20,44 +20,18 @@ title.Parent = frame
 
 -- Variable to track if the "lock-on" feature is active
 local lockOnActive = false
+local lockPlayer = nil
 
--- Function to highlight all players (with glow effect)
-local function highlightPlayers()
-    for _, player in pairs(game.Players:GetPlayers()) do
-        if player.Character and player.Character:FindFirstChild("Head") then
-            local head = player.Character.Head
-            local highlight = Instance.new("Highlight")
-            highlight.Adornee = head
-            highlight.Parent = head
-            highlight.FillColor = Color3.fromRGB(255, 0, 0)  -- Red color for highlight
-            highlight.OutlineColor = Color3.fromRGB(255, 0, 0)
-            highlight.FillTransparency = 0.5
-            highlight.OutlineTransparency = 0
-            highlight.Enabled = true
-        end
-    end
-end
-
--- Button to Highlight All Players
-local highlightButton = Instance.new("TextButton")
-highlightButton.Size = UDim2.new(1, 0, 0.2, 0)
-highlightButton.Position = UDim2.new(0, 0, 0.2, 0)
-highlightButton.Text = "Highlight All Players"
-highlightButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-highlightButton.BackgroundColor3 = Color3.fromRGB(0, 128, 255)
-highlightButton.Parent = frame
-highlightButton.MouseButton1Click:Connect(highlightPlayers)
-
--- Function to continuously lock on to the closest player's head
-local function lockOnClosestPlayer()
+-- Function to find the closest player
+local function findClosestPlayer()
     local closestPlayer = nil
     local shortestDistance = math.huge  -- Start with a very large distance value
 
     -- Find the closest player to the local player
     for _, player in pairs(game.Players:GetPlayers()) do
-        if player.Character and player.Character:FindFirstChild("Head") then
-            local head = player.Character.Head
-            local distance = (game.Players.LocalPlayer.Character.HumanoidRootPart.Position - head.Position).Magnitude
+        if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            local playerRoot = player.Character.HumanoidRootPart
+            local distance = (game.Players.LocalPlayer.Character.HumanoidRootPart.Position - playerRoot.Position).Magnitude
             if distance < shortestDistance then
                 closestPlayer = player
                 shortestDistance = distance
@@ -65,10 +39,17 @@ local function lockOnClosestPlayer()
         end
     end
 
-    -- If a closest player was found, lock camera to their head
+    return closestPlayer
+end
+
+-- Function to continuously lock on to the closest player's character
+local function lockOnClosestPlayer()
+    local closestPlayer = findClosestPlayer()
+
     if closestPlayer then
-        local head = closestPlayer.Character.Head
-        game.Workspace.CurrentCamera.CFrame = CFrame.new(game.Players.LocalPlayer.Character.HumanoidRootPart.Position, head.Position)
+        local rootPart = closestPlayer.Character.HumanoidRootPart
+        -- Lock the camera to the closest player's HumanoidRootPart
+        game.Workspace.CurrentCamera.CFrame = CFrame.new(game.Players.LocalPlayer.Character.HumanoidRootPart.Position, rootPart.Position)
     end
 end
 
@@ -83,7 +64,7 @@ local function toggleLockOn()
     end
 end
 
--- Button to Lock onto Closest Player's Head
+-- Button to Lock onto Closest Player's Character
 local lockOnButton = Instance.new("TextButton")
 lockOnButton.Size = UDim2.new(1, 0, 0.2, 0)
 lockOnButton.Position = UDim2.new(0, 0, 1.0, 0)
