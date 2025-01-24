@@ -89,12 +89,14 @@ local function toggleNoclip()
         local humanoid = character.Humanoid
         humanoid.PlatformStand = noclipEnabled
         if noclipEnabled then
+            -- Disable collision with all parts in the character
             for _, part in pairs(character:GetChildren()) do
                 if part:IsA("BasePart") then
                     part.CanCollide = false
                 end
             end
         else
+            -- Restore collision
             for _, part in pairs(character:GetChildren()) do
                 if part:IsA("BasePart") then
                     part.CanCollide = true
@@ -117,6 +119,7 @@ noclipButton.MouseButton1Click:Connect(toggleNoclip)
 -- Function to close the hub UI
 local function closeHub()
     frame.Visible = false
+    reopenButton.Visible = true  -- Show reopen button when closed
 end
 
 -- Button to Close the Hub
@@ -130,7 +133,7 @@ closeButton.TextSize = 18
 closeButton.Parent = frame
 closeButton.MouseButton1Click:Connect(closeHub)
 
--- Button to Reopen the Hub
+-- Button to Reopen the Hub (only visible when UI is closed)
 local reopenButton = Instance.new("TextButton")
 reopenButton.Size = UDim2.new(0.1, 0, 0.1, 0)
 reopenButton.Position = UDim2.new(0.9, 0, 0, 0)
@@ -138,8 +141,10 @@ reopenButton.Text = "Open Hub"
 reopenButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 reopenButton.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
 reopenButton.Parent = screenGui
+reopenButton.Visible = false  -- Initially hidden
 reopenButton.MouseButton1Click:Connect(function()
     frame.Visible = true
+    reopenButton.Visible = false  -- Hide reopen button when hub is open
 end)
 
 -- Moveable UI Script
