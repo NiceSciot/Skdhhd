@@ -7,7 +7,7 @@ local frame = Instance.new("Frame")
 frame.Size = UDim2.new(0.2, 0, 0.4, 0)
 frame.Position = UDim2.new(0.8, -frame.Size.X.Offset, 0, 0) -- Top-right corner
 frame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-frame.Visible = true  -- Ensure the frame is visible from the start
+frame.Visible = true
 frame.Parent = screenGui
 
 -- Title for the Hub
@@ -18,89 +18,139 @@ title.TextColor3 = Color3.fromRGB(255, 255, 255)
 title.BackgroundTransparency = 1
 title.Parent = frame
 
--- Variable to track if the "lock-on" feature is active
-local lockOnActive = false
-local lockPlayer = nil
+-- Button to close the UI
+local closeButton = Instance.new("TextButton")
+closeButton.Size = UDim2.new(0.2, 0, 0.1, 0)
+closeButton.Position = UDim2.new(0.8, 0, 0, 0)
+closeButton.Text = "Close"
+closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+closeButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+closeButton.Parent = frame
+closeButton.MouseButton1Click:Connect(function()
+    frame.Visible = false
+    reopenButton.Visible = true
+end)
 
--- Function to find the closest player
-local function findClosestPlayer()
-    local closestPlayer = nil
-    local shortestDistance = math.huge  -- Start with a very large distance value
+-- Button to reopen the UI
+local reopenButton = Instance.new("TextButton")
+reopenButton.Size = UDim2.new(0.2, 0, 0.1, 0)
+reopenButton.Position = UDim2.new(0.8, 0, 0, 0)
+reopenButton.Text = "Open Hub"
+reopenButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+reopenButton.BackgroundColor3 = Color3.fromRGB(0, 128, 255)
+reopenButton.Visible = false
+reopenButton.Parent = screenGui
+reopenButton.MouseButton1Click:Connect(function()
+    frame.Visible = true
+    reopenButton.Visible = false
+end)
 
-    -- Find the closest player to the local player
-    for _, player in pairs(game.Players:GetPlayers()) do
-        if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-            local playerRoot = player.Character.HumanoidRootPart
-            local distance = (game.Players.LocalPlayer.Character.HumanoidRootPart.Position - playerRoot.Position).Magnitude
-            if distance < shortestDistance then
-                closestPlayer = player
-                shortestDistance = distance
+-- Button to show game pass statuses
+local gamePassButton = Instance.new("TextButton")
+gamePassButton.Size = UDim2.new(1, 0, 0.2, 0)
+gamePassButton.Position = UDim2.new(0, 0, 0.2, 0)
+gamePassButton.Text = "Grant All Game Passes"
+gamePassButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+gamePassButton.BackgroundColor3 = Color3.fromRGB(0, 128, 255)
+gamePassButton.Parent = frame
+
+-- Label to display results
+local resultLabel = Instance.new("TextLabel")
+resultLabel.Size = UDim2.new(1, 0, 0.2, 0)
+resultLabel.Position = UDim2.new(0, 0, 0.6, 0)
+resultLabel.Text = ""
+resultLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+resultLabel.BackgroundTransparency = 1
+resultLabel.Parent = frame
+
+-- Function to check and display game pass ownership
+local function grantAllGamePasses()
+    local player = game.Players.LocalPlayer
+    local gamePassesOwned = {}
+    local success, errorMsg = pcall(function()
+        -- Check all game passes for this game
+        for _, gamePassId in pairs(game:GetService("MarketplaceService"):GetGamePasses()) do
+            local hasGamePass = player:HasGamePass(gamePassId)
+            table.insert(gamePassesOwned, {id = gamePassId, owned = hasGamePass})
+        end
+    end)
+
+    -- Display the result
+    if success then
+        if #gamePassesOwned == 0 then
+            resultLabel.Text = "No game passes found for this game."
+            resultLabel.TextColor3 = Color3.fromRGB(255, 0, 0) -- Red for error
+        else
+            local allOwned = true
+            local message = "Game Passes:\n"
+            for _, gamePass in pairs(gamePassesOwned) do
+                if gamePass.owned then
+                    message = message .. "Game Pass ID " .. gamePass.id .. ": Already Owned\n"
+                else
+                    message = message .. "Game Pass ID " .. gamePass.id .. ": Not Owned\n"
+                    allOwned = false
+                end
             end
+            resultLabel.Text = message
+            resultLabel.TextColor3 = allOwned and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 255, 0) -- Yellow if some are not owned
+        end
+    else
+        resultLabel.Text = "Error fetching game passes: " .. errorMsg
+        resultLabel.TextColor3 = Color3.fromRGB(255, 0, 0) -- Red for error
+    end
+end
+
+-- Connect the button to check and grant all game passes when clicked
+gamePassButton.MouseButton1Click:Connect(grantAllGamePasses)
+
+-- Other features (like Highlight All Players, Noclip, etc.) would go here
+-- Function to highlight all players
+local function highlightPlayers()
+    for _, player in pairs(game.Players:GetPlayers()) do
+        if player.Character and player.Character:FindFirstChild("Head") then
+            local head = player.Character.Head
+            local highlight = Instance.new("SelectionBox")
+            highlight.Adornee = head
+            highlight.Parent = head
+            highlight.LineThickness = 0.1
+            highlight.Color3 = Color3.fromRGB(255, 0, 0)  -- Red color for highlight
+            highlight.Enabled = true
         end
     end
-
-    return closestPlayer
 end
 
--- Function to continuously lock on to the closest player's character
-local function lockOnClosestPlayer()
-    local closestPlayer = findClosestPlayer()
+-- Button to Highlight All Players
+local highlightButton = Instance.new("TextButton")
+highlightButton.Size = UDim2.new(1, 0, 0.2, 0)
+highlightButton.Position = UDim2.new(0, 0, 0.2, 0)
+highlightButton.Text = "Highlight All Players"
+highlightButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+highlightButton.BackgroundColor3 = Color3.fromRGB(0, 128, 255)
+highlightButton.Parent = frame
+highlightButton.MouseButton1Click:Connect(highlightPlayers)
 
-    if closestPlayer then
-        local rootPart = closestPlayer.Character.HumanoidRootPart
-        -- Lock the camera to the closest player's HumanoidRootPart
-        game.Workspace.CurrentCamera.CFrame = CFrame.new(game.Players.LocalPlayer.Character.HumanoidRootPart.Position, rootPart.Position)
-    end
-end
+-- Noclip functionality
+local noclipButton = Instance.new("TextButton")
+noclipButton.Size = UDim2.new(1, 0, 0.2, 0)
+noclipButton.Position = UDim2.new(0, 0, 1, 0)
+noclipButton.Text = "Toggle Noclip"
+noclipButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+noclipButton.BackgroundColor3 = Color3.fromRGB(255, 165, 0)
+noclipButton.Parent = frame
 
--- Toggle lock-on function (activate/deactivate)
-local function toggleLockOn()
-    lockOnActive = not lockOnActive
-
-    -- Keep locking the camera if active
-    while lockOnActive do
-        lockOnClosestPlayer()
-        wait(0.1)  -- Update every 0.1 seconds
-    end
-end
-
--- Button to Lock onto Closest Player's Character
-local lockOnButton = Instance.new("TextButton")
-lockOnButton.Size = UDim2.new(1, 0, 0.2, 0)
-lockOnButton.Position = UDim2.new(0, 0, 1.0, 0)
-lockOnButton.Text = "Lock on Closest Player"
-lockOnButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-lockOnButton.BackgroundColor3 = Color3.fromRGB(255, 165, 0)
-lockOnButton.Parent = frame
-lockOnButton.MouseButton1Click:Connect(toggleLockOn)
-
--- Walk Speed Textbox and Apply Button
-local walkSpeedLabel = Instance.new("TextLabel")
-walkSpeedLabel.Size = UDim2.new(0.7, 0, 0.1, 0)
-walkSpeedLabel.Position = UDim2.new(0.15, 0, 0.6, 0)
-walkSpeedLabel.Text = "Set Walk Speed"
-walkSpeedLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-walkSpeedLabel.BackgroundTransparency = 1
-walkSpeedLabel.Parent = frame
-
-local walkSpeedTextbox = Instance.new("TextBox")
-walkSpeedTextbox.Size = UDim2.new(0.7, 0, 0.1, 0)
-walkSpeedTextbox.Position = UDim2.new(0.15, 0, 0.7, 0)
-walkSpeedTextbox.PlaceholderText = "Enter Walk Speed"
-walkSpeedTextbox.TextColor3 = Color3.fromRGB(0, 0, 0)
-walkSpeedTextbox.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-walkSpeedTextbox.Parent = frame
-
-local applyWalkSpeedButton = Instance.new("TextButton")
-applyWalkSpeedButton.Size = UDim2.new(0.7, 0, 0.1, 0)
-applyWalkSpeedButton.Position = UDim2.new(0.15, 0, 0.8, 0)
-applyWalkSpeedButton.Text = "Apply Walk Speed"
-applyWalkSpeedButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-applyWalkSpeedButton.BackgroundColor3 = Color3.fromRGB(0, 128, 255)
-applyWalkSpeedButton.Parent = frame
-applyWalkSpeedButton.MouseButton1Click:Connect(function()
-    local speed = tonumber(walkSpeedTextbox.Text)
-    if speed then
-        game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = speed
+local noclipEnabled = false
+noclipButton.MouseButton1Click:Connect(function()
+    noclipEnabled = not noclipEnabled
+    local character = game.Players.LocalPlayer.Character
+    if character then
+        local humanoid = character:FindFirstChild("Humanoid")
+        if humanoid then
+            humanoid.PlatformStand = noclipEnabled
+            for _, part in pairs(character:GetChildren()) do
+                if part:IsA("Part") then
+                    part.CanCollide = not noclipEnabled
+                end
+            end
+        end
     end
 end)
