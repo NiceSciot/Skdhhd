@@ -7,26 +7,29 @@ local frame = Instance.new("Frame")
 frame.Size = UDim2.new(0.2, 0, 0.4, 0)
 frame.Position = UDim2.new(0.8, -frame.Size.X.Offset, 0, 0) -- Top-right corner
 frame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+frame.Visible = false  -- Initially hidden
 frame.Parent = screenGui
 
 -- Title for the Hub
 local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1, 0, 0.2, 0)
-title.Text = "Script Hub"
+title.Text = "Hax Hub V5"
 title.TextColor3 = Color3.fromRGB(255, 255, 255)
 title.BackgroundTransparency = 1
 title.Parent = frame
 
--- Function to highlight all players (using your script)
+-- Function to highlight all players (with glow effect)
 local function highlightPlayers()
     for _, player in pairs(game.Players:GetPlayers()) do
         if player.Character and player.Character:FindFirstChild("Head") then
             local head = player.Character.Head
-            local highlight = Instance.new("SelectionBox")
+            local highlight = Instance.new("Highlight")
             highlight.Adornee = head
             highlight.Parent = head
-            highlight.LineThickness = 0.1
-            highlight.Color3 = Color3.fromRGB(255, 0, 0)  -- Red color for highlight
+            highlight.FillColor = Color3.fromRGB(255, 0, 0)  -- Red color for highlight
+            highlight.OutlineColor = Color3.fromRGB(255, 0, 0)
+            highlight.FillTransparency = 0.5
+            highlight.OutlineTransparency = 0
             highlight.Enabled = true
         end
     end
@@ -76,6 +79,41 @@ applyWalkSpeedButton.MouseButton1Click:Connect(function()
     end
 end)
 
+-- Noclip Toggle
+local noclipEnabled = false
+
+local function toggleNoclip()
+    noclipEnabled = not noclipEnabled
+    local character = game.Players.LocalPlayer.Character
+    if character and character:FindFirstChild("Humanoid") then
+        local humanoid = character.Humanoid
+        humanoid.PlatformStand = noclipEnabled
+        if noclipEnabled then
+            for _, part in pairs(character:GetChildren()) do
+                if part:IsA("BasePart") then
+                    part.CanCollide = false
+                end
+            end
+        else
+            for _, part in pairs(character:GetChildren()) do
+                if part:IsA("BasePart") then
+                    part.CanCollide = true
+                end
+            end
+        end
+    end
+end
+
+-- Button to Enable/Disable Noclip
+local noclipButton = Instance.new("TextButton")
+noclipButton.Size = UDim2.new(1, 0, 0.2, 0)
+noclipButton.Position = UDim2.new(0, 0, 1, 0)
+noclipButton.Text = "Toggle Noclip"
+noclipButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+noclipButton.BackgroundColor3 = Color3.fromRGB(255, 255, 0)
+noclipButton.Parent = frame
+noclipButton.MouseButton1Click:Connect(toggleNoclip)
+
 -- Function to close the hub UI
 local function closeHub()
     frame.Visible = false
@@ -91,6 +129,18 @@ closeButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
 closeButton.TextSize = 18
 closeButton.Parent = frame
 closeButton.MouseButton1Click:Connect(closeHub)
+
+-- Button to Reopen the Hub
+local reopenButton = Instance.new("TextButton")
+reopenButton.Size = UDim2.new(0.1, 0, 0.1, 0)
+reopenButton.Position = UDim2.new(0.9, 0, 0, 0)
+reopenButton.Text = "Open Hub"
+reopenButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+reopenButton.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+reopenButton.Parent = screenGui
+reopenButton.MouseButton1Click:Connect(function()
+    frame.Visible = true
+end)
 
 -- Moveable UI Script
 local dragging = false
