@@ -4,90 +4,50 @@ local player = game.Players.LocalPlayer
 local playerGui = player.PlayerGui
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
 
--- Create RemoteEvent in ReplicatedStorage if it doesn't exist (for communication between client and server)
-local moveEvent = ReplicatedStorage:FindFirstChild("MoveEvent")
-if not moveEvent then
-    moveEvent = Instance.new("RemoteEvent")
-    moveEvent.Name = "MoveEvent"
-    moveEvent.Parent = ReplicatedStorage
-end
-
--- UI Setup (Create a button on the top-right of the screen)
+-- Create UI Screen and Button
 local screenGui = Instance.new("ScreenGui")
 screenGui.Parent = playerGui
-screenGui.Name = "PushBackUI"
+screenGui.Name = "TeleportUI"
 
 local button = Instance.new("TextButton")
 button.Parent = screenGui
-button.Size = UDim2.new(0, 150, 0, 50)
-button.Position = UDim2.new(1, -160, 0, 20) -- Top-right position
-button.Text = "Activate Pushback"
+button.Size = UDim2.new(0, 200, 0, 50)
+button.Position = UDim2.new(1, -220, 0, 20)  -- Right side of the screen
+button.Text = "Teleport to Random Player"
 button.TextSize = 20
-button.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+button.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
 
--- Boolean to track if the effect is activated or not
-local pushbackActive = false
-
--- Function to activate/deactivate pushback
-local function togglePushback()
-    pushbackActive = not pushbackActive  -- Toggle the state
-
-    if pushbackActive then
-        button.Text = "Deactivate Pushback"
-    else
-        button.Text = "Activate Pushback"
-    end
-end
-
--- Detect when the button is clicked
-button.MouseButton1Click:Connect(togglePushback)
-
--- Function to handle the pushback movement
-local function handlePushback()
-    while pushbackActive do
-        -- Iterate over all players in the game
-        for _, otherPlayer in ipairs(Players:GetPlayers()) do
-            if otherPlayer ~= player and otherPlayer.Character and otherPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                local otherCharacter = otherPlayer.Character
-                local otherHumanoidRootPart = otherCharacter.HumanoidRootPart
-
-                -- Calculate the distance between the player and the other character
-                local distance = (otherHumanoidRootPart.Position - player.Character.HumanoidRootPart.Position).Magnitude
-
-                -- If the other player is within 5 studs, move the character away
-                if distance < 5 then
-                    local direction = (player.Character.HumanoidRootPart.Position - otherHumanoidRootPart.Position).unit
-                    local moveDirection = player.Character.HumanoidRootPart.Position + direction * 5  -- Move 5 studs away
-
-                    -- Move the character by telling it to walk to the new position
-                    moveEvent:FireServer(player.Character, moveDirection)
-                end
-            end
+-- Function to teleport the player to a random player's position
+local function teleportToRandomPlayer()
+    -- Get all players in the game except the local player
+    local otherPlayers = {}
+    for _, p in pairs(Players:GetPlayers()) do
+        if p ~= player then
+            table.insert(otherPlayers, p)
         end
-        wait(0.1)  -- Check every 0.1 seconds
+    end
+
+    -- If there are any other players, teleport to a random one
+    if #otherPlayers > 0 then
+        local randomPlayer = otherPlayers[math.random(1, #otherPlayers)]
+        if randomPlayer.Character and randomPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            local targetPosition = randomPlayer.Character.HumanoidRootPart.Position
+            player.Character:SetPrimaryPartCFrame(CFrame.new(targetPosition))  -- Teleport to the other player's position
+        end
     end
 end
 
--- Start the pushback logic when activated
-RunService.Heartbeat:Connect(function()
-    if pushbackActive then
-        handlePushback()  -- Start handling pushback when active
+-- Detect button click to teleport
+button.MouseButton1Click:Connect(teleportToRandomPlayer)
+
+-- Detect Xbox controller B button press to teleport
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end  -- Ignore if the input is already processed (e.g., for UI or movement)
+
+    -- Check if the input is from the B button on the Xbox controller
+    if input.UserInputType == Enum.UserInputType.GamepadButton and input.KeyCode == Enum.KeyCode.ButtonB then
+        teleportToRandomPlayer()
     end
 end)
-
--- Server-side code for handling the movement (should be placed in a Script inside ServerScriptService)
-local function onMoveEventFired(player, targetPosition)
-    if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-        local humanoidRootPart = player.Character.HumanoidRootPart
-        local humanoid = player.Character:FindFirstChild("Humanoid")
-
-        -- Make the humanoid walk towards the target position
-        if humanoid then
-            humanoid:MoveTo(targetPosition)
-        end
-    end
-end
-
-moveEvent.OnServerEvent:Connect(onMoveEventFired)
