@@ -5,7 +5,7 @@ screenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
 -- Frame for the Hub
 local frame = Instance.new("Frame")
 frame.Size = UDim2.new(0.2, 0, 0.4, 0)
-frame.Position = UDim2.new(0.4, 0, 0.3, 0)
+frame.Position = UDim2.new(0.8, -frame.Size.X.Offset, 0, 0) -- Top-right corner
 frame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 frame.Parent = screenGui
 
@@ -17,7 +17,7 @@ title.TextColor3 = Color3.fromRGB(255, 255, 255)
 title.BackgroundTransparency = 1
 title.Parent = frame
 
--- Function to highlight all players
+-- Function to highlight all players (using your script)
 local function highlightPlayers()
     for _, player in pairs(game.Players:GetPlayers()) do
         if player.Character and player.Character:FindFirstChild("Head") then
@@ -42,27 +42,39 @@ highlightButton.BackgroundColor3 = Color3.fromRGB(0, 128, 255)
 highlightButton.Parent = frame
 highlightButton.MouseButton1Click:Connect(highlightPlayers)
 
--- Function to teleport to a random player
-local function teleportToRandomPlayer()
-    local players = game.Players:GetPlayers()
-    if #players > 1 then
-        local randomPlayer = players[math.random(1, #players)]
-        if randomPlayer.Character and randomPlayer.Character:FindFirstChild("HumanoidRootPart") then
-            local root = randomPlayer.Character.HumanoidRootPart
-            game.Players.LocalPlayer.Character:SetPrimaryPartCFrame(root.CFrame)
-        end
-    end
-end
+-- Walk Speed Textbox and Apply Button
+local walkSpeedLabel = Instance.new("TextLabel")
+walkSpeedLabel.Size = UDim2.new(0.7, 0, 0.1, 0)
+walkSpeedLabel.Position = UDim2.new(0.15, 0, 0.6, 0)
+walkSpeedLabel.Text = "Set Walk Speed"
+walkSpeedLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+walkSpeedLabel.BackgroundTransparency = 1
+walkSpeedLabel.Parent = frame
 
--- Button to teleport to a random player
-local teleportButton = Instance.new("TextButton")
-teleportButton.Size = UDim2.new(1, 0, 0.2, 0)
-teleportButton.Position = UDim2.new(0, 0, 0.4, 0)
-teleportButton.Text = "Teleport to Random Player"
-teleportButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-teleportButton.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
-teleportButton.Parent = frame
-teleportButton.MouseButton1Click:Connect(teleportToRandomPlayer)
+local walkSpeedTextbox = Instance.new("TextBox")
+walkSpeedTextbox.Size = UDim2.new(0.7, 0, 0.1, 0)
+walkSpeedTextbox.Position = UDim2.new(0.15, 0, 0.7, 0)
+walkSpeedTextbox.PlaceholderText = "Enter Walk Speed"
+walkSpeedTextbox.TextColor3 = Color3.fromRGB(0, 0, 0)
+walkSpeedTextbox.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+walkSpeedTextbox.Parent = frame
+
+local applyWalkSpeedButton = Instance.new("TextButton")
+applyWalkSpeedButton.Size = UDim2.new(0.7, 0, 0.1, 0)
+applyWalkSpeedButton.Position = UDim2.new(0.15, 0, 0.8, 0)
+applyWalkSpeedButton.Text = "Apply Walk Speed"
+applyWalkSpeedButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+applyWalkSpeedButton.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+applyWalkSpeedButton.Parent = frame
+
+applyWalkSpeedButton.MouseButton1Click:Connect(function()
+    local walkSpeed = tonumber(walkSpeedTextbox.Text)
+    if walkSpeed then
+        game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = walkSpeed
+    else
+        warn("Invalid Walk Speed entered")
+    end
+end)
 
 -- Function to close the hub UI
 local function closeHub()
