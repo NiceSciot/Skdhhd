@@ -1,0 +1,88 @@
+-- Create the Hub UI
+local screenGui = Instance.new("ScreenGui")
+screenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+
+-- Frame for the Hub
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0.3, 0, 0.5, 0)
+frame.Position = UDim2.new(0.35, 0, 0.25, 0)
+frame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+frame.Parent = screenGui
+
+-- Title for the Hub
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0.2, 0)
+title.Text = "Script Hub"
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.BackgroundTransparency = 1
+title.Parent = frame
+
+-- Hide Hub Icon (for toggling visibility)
+local icon = Instance.new("Frame")
+icon.Size = UDim2.new(0.1, 0, 0.1, 0)
+icon.Position = UDim2.new(0.9, 0, 0.9, 0)
+icon.BackgroundColor3 = Color3.fromRGB(math.random(0, 255), math.random(0, 255), math.random(0, 255))  -- Random color
+icon.BorderRadius = UDim.new(1, 0)  -- Make it a circle
+icon.Parent = screenGui
+
+-- Function to highlight all players (auto-execute on load)
+local function highlightPlayers()
+    for _, player in pairs(game.Players:GetPlayers()) do
+        if player.Character and player.Character:FindFirstChild("Head") then
+            local head = player.Character.Head
+            local highlight = Instance.new("SelectionBox")
+            highlight.Adornee = head
+            highlight.Parent = head
+            highlight.LineThickness = 0.1
+            highlight.Color3 = Color3.fromRGB(255, 0, 0)  -- Red color for highlight
+            highlight.Enabled = true
+        end
+    end
+end
+
+-- Function to set walk speed to 50 (auto-execute on load)
+local function setWalkSpeed()
+    game.Players.LocalPlayer.Character:WaitForChild("Humanoid").WalkSpeed = 50
+end
+
+-- Function to set jump power to 50 (auto-execute on load)
+local function setJumpPower()
+    game.Players.LocalPlayer.Character:WaitForChild("Humanoid").JumpPower = 50
+end
+
+-- Execute all actions immediately when the script runs
+highlightPlayers()
+setWalkSpeed()
+setJumpPower()
+
+-- RGB Color Cycle for the Hub Background
+local function rgbCycle()
+    while true do
+        frame.BackgroundColor3 = Color3.fromRGB(math.random(0, 255), math.random(0, 255), math.random(0, 255))  -- Random RGB color
+        wait(0.5)  -- Change color every 0.5 seconds
+    end
+end
+
+-- Start the RGB color cycle for the hub
+coroutine.wrap(rgbCycle)()
+
+-- Function to toggle the hub visibility
+local hubVisible = true
+local function toggleHub()
+    if hubVisible then
+        frame.Visible = false
+        icon.Visible = true
+    else
+        frame.Visible = true
+        icon.Visible = false
+    end
+    hubVisible = not hubVisible
+end
+
+-- Connect the icon to toggle the hub visibility
+icon.MouseButton1Click = Instance.new("BindableFunction")
+icon.MouseButton1Click.OnInvoke = toggleHub
+
+-- Initial state: the icon is visible, and the hub is open
+icon.Visible = true
+frame.Visible = true
