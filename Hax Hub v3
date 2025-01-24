@@ -1,0 +1,111 @@
+-- Create the Hub UI
+local screenGui = Instance.new("ScreenGui")
+screenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+
+-- Frame for the Hub
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0.3, 0, 0.5, 0)
+frame.Position = UDim2.new(0.35, 0, 0.25, 0)
+frame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+frame.Parent = screenGui
+
+-- Title for the Hub
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0.2, 0)
+title.Text = "Hax Hub V2"
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.TextSize = 20
+title.TextAlignment = Enum.TextAlignment.Center
+title.BackgroundTransparency = 1
+title.Parent = frame
+
+-- Hide Hub Icon (for toggling visibility)
+local icon = Instance.new("TextButton")
+icon.Size = UDim2.new(0.1, 0, 0.1, 0)
+icon.Position = UDim2.new(0.9, 0, 0.9, 0)
+icon.Text = "🔲"
+icon.TextColor3 = Color3.fromRGB(255, 255, 255)
+icon.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+icon.BorderRadius = UDim.new(1, 0)  -- Make it circular
+icon.TextSize = 20
+icon.Parent = screenGui
+
+-- Button to Highlight All Players
+local highlightButton = Instance.new("TextButton")
+highlightButton.Size = UDim2.new(1, 0, 0.2, 0)
+highlightButton.Position = UDim2.new(0, 0, 0.2, 0)
+highlightButton.Text = "Highlight All Players"
+highlightButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+highlightButton.BackgroundColor3 = Color3.fromRGB(0, 128, 255)
+highlightButton.TextSize = 16
+highlightButton.Parent = frame
+
+-- Button to Set Walk Speed to 50
+local walkSpeedButton = Instance.new("TextButton")
+walkSpeedButton.Size = UDim2.new(1, 0, 0.2, 0)
+walkSpeedButton.Position = UDim2.new(0, 0, 0.4, 0)
+walkSpeedButton.Text = "Set Walk Speed to 50"
+walkSpeedButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+walkSpeedButton.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+walkSpeedButton.TextSize = 16
+walkSpeedButton.Parent = frame
+
+-- Button to Set Jump Power to 50
+local jumpPowerButton = Instance.new("TextButton")
+jumpPowerButton.Size = UDim2.new(1, 0, 0.2, 0)
+jumpPowerButton.Position = UDim2.new(0, 0, 0.6, 0)
+jumpPowerButton.Text = "Set Jump Power to 50"
+jumpPowerButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+jumpPowerButton.BackgroundColor3 = Color3.fromRGB(255, 165, 0)
+jumpPowerButton.TextSize = 16
+jumpPowerButton.Parent = frame
+
+-- Function to highlight all players
+local function highlightPlayers()
+    for _, player in pairs(game.Players:GetPlayers()) do
+        if player.Character and player.Character:FindFirstChild("Head") then
+            local head = player.Character.Head
+            local highlight = Instance.new("SelectionBox")
+            highlight.Adornee = head
+            highlight.Parent = head
+            highlight.LineThickness = 0.1
+            highlight.Color3 = Color3.fromRGB(255, 0, 0)  -- Red color for highlight
+            highlight.Enabled = true
+        end
+    end
+end
+
+-- Function to set walk speed to 50
+local function setWalkSpeed()
+    game.Players.LocalPlayer.Character:WaitForChild("Humanoid").WalkSpeed = 50
+end
+
+-- Function to set jump power to 50
+local function setJumpPower()
+    game.Players.LocalPlayer.Character:WaitForChild("Humanoid").JumpPower = 50
+end
+
+-- Connect the buttons to their functions
+highlightButton.MouseButton1Click:Connect(highlightPlayers)
+walkSpeedButton.MouseButton1Click:Connect(setWalkSpeed)
+jumpPowerButton.MouseButton1Click:Connect(setJumpPower)
+
+-- Function to toggle the hub visibility
+local hubVisible = true
+local function toggleHub()
+    if hubVisible then
+        frame.Visible = false
+        icon.Visible = true
+    else
+        frame.Visible = true
+        icon.Visible = false
+    end
+    hubVisible = not hubVisible
+end
+
+-- Connect the icon to toggle the hub visibility
+icon.MouseButton1Click:Connect(toggleHub)
+
+-- Initial state: the icon is visible, and the hub is open
+icon.Visible = true
+frame.Visible = true
