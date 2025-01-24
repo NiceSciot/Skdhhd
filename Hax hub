@@ -1,0 +1,106 @@
+-- Create the Hub UI
+local screenGui = Instance.new("ScreenGui")
+screenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+
+-- Frame for the Hub
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0.2, 0, 0.4, 0)
+frame.Position = UDim2.new(0.8, -frame.Size.X.Offset, 0, 0) -- Top-right corner
+frame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+frame.Visible = true  -- Ensure the frame is visible from the start
+frame.Parent = screenGui
+
+-- Title for the Hub
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0.2, 0)
+title.Text = "Hax Hub V5"
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.BackgroundTransparency = 1
+title.Parent = frame
+
+-- Variable to track if the "lock-on" feature is active
+local lockOnActive = false
+local lockPlayer = nil
+
+-- Function to find the closest player
+local function findClosestPlayer()
+    local closestPlayer = nil
+    local shortestDistance = math.huge  -- Start with a very large distance value
+
+    -- Find the closest player to the local player
+    for _, player in pairs(game.Players:GetPlayers()) do
+        if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            local playerRoot = player.Character.HumanoidRootPart
+            local distance = (game.Players.LocalPlayer.Character.HumanoidRootPart.Position - playerRoot.Position).Magnitude
+            if distance < shortestDistance then
+                closestPlayer = player
+                shortestDistance = distance
+            end
+        end
+    end
+
+    return closestPlayer
+end
+
+-- Function to continuously lock on to the closest player's character
+local function lockOnClosestPlayer()
+    local closestPlayer = findClosestPlayer()
+
+    if closestPlayer then
+        local rootPart = closestPlayer.Character.HumanoidRootPart
+        -- Lock the camera to the closest player's HumanoidRootPart
+        game.Workspace.CurrentCamera.CFrame = CFrame.new(game.Players.LocalPlayer.Character.HumanoidRootPart.Position, rootPart.Position)
+    end
+end
+
+-- Toggle lock-on function (activate/deactivate)
+local function toggleLockOn()
+    lockOnActive = not lockOnActive
+
+    -- Keep locking the camera if active
+    while lockOnActive do
+        lockOnClosestPlayer()
+        wait(0.1)  -- Update every 0.1 seconds
+    end
+end
+
+-- Button to Lock onto Closest Player's Character
+local lockOnButton = Instance.new("TextButton")
+lockOnButton.Size = UDim2.new(1, 0, 0.2, 0)
+lockOnButton.Position = UDim2.new(0, 0, 1.0, 0)
+lockOnButton.Text = "Lock on Closest Player"
+lockOnButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+lockOnButton.BackgroundColor3 = Color3.fromRGB(255, 165, 0)
+lockOnButton.Parent = frame
+lockOnButton.MouseButton1Click:Connect(toggleLockOn)
+
+-- Walk Speed Textbox and Apply Button
+local walkSpeedLabel = Instance.new("TextLabel")
+walkSpeedLabel.Size = UDim2.new(0.7, 0, 0.1, 0)
+walkSpeedLabel.Position = UDim2.new(0.15, 0, 0.6, 0)
+walkSpeedLabel.Text = "Set Walk Speed"
+walkSpeedLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+walkSpeedLabel.BackgroundTransparency = 1
+walkSpeedLabel.Parent = frame
+
+local walkSpeedTextbox = Instance.new("TextBox")
+walkSpeedTextbox.Size = UDim2.new(0.7, 0, 0.1, 0)
+walkSpeedTextbox.Position = UDim2.new(0.15, 0, 0.7, 0)
+walkSpeedTextbox.PlaceholderText = "Enter Walk Speed"
+walkSpeedTextbox.TextColor3 = Color3.fromRGB(0, 0, 0)
+walkSpeedTextbox.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+walkSpeedTextbox.Parent = frame
+
+local applyWalkSpeedButton = Instance.new("TextButton")
+applyWalkSpeedButton.Size = UDim2.new(0.7, 0, 0.1, 0)
+applyWalkSpeedButton.Position = UDim2.new(0.15, 0, 0.8, 0)
+applyWalkSpeedButton.Text = "Apply Walk Speed"
+applyWalkSpeedButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+applyWalkSpeedButton.BackgroundColor3 = Color3.fromRGB(0, 128, 255)
+applyWalkSpeedButton.Parent = frame
+applyWalkSpeedButton.MouseButton1Click:Connect(function()
+    local speed = tonumber(walkSpeedTextbox.Text)
+    if speed then
+        game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = speed
+    end
+end)
